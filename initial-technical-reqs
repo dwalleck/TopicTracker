@@ -1,0 +1,8 @@
+# Initial technical requirements
+
+- Use .NET
+- Use TUnit for Unit testing
+- Use Polly for resilency (if needed)
+- Use Tethys.Results to allow for railway driven development
+- Source generators (if needed or helpful)
+- High performance
