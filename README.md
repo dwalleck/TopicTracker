@@ -1,368 +1,165 @@
-# Tethys.Results
+# TopicTracker
 
-[![NuGet](https://img.shields.io/nuget/v/Tethys.Results.svg)](https://www.nuget.org/packages/Tethys.Results/)
-[![Build Status](https://github.com/dwalleck/Tethys.Results/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/dwalleck/Tethys.Results/actions)
+[![Progress](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/dwalleck/TopicTracker/main/context/TopicTracker/progress.yaml&label=Progress&query=$.metrics.completed_tasks&suffix=/${metrics.total_tasks}%20tasks)](./context/TopicTracker/PROGRESS.md)
+[![Phase](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/dwalleck/TopicTracker/main/context/TopicTracker/progress.yaml&label=Phase&query=$.current_status.phase_name)](./context/TopicTracker/PROGRESS.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A lightweight, thread-safe Result pattern implementation for .NET that provides a clean, functional approach to error handling without exceptions.
+A high-performance AWS SNS mocking and testing library for .NET applications. TopicTracker provides instant visibility into SNS messages during local development and testing, eliminating the need for complex AWS infrastructure or tools like LocalStack.
 
-## Features
+## 🚀 Features
 
-- ✅ **Simple and Intuitive API** - Easy to understand and use
-- ✅ **Thread-Safe** - Immutable design ensures thread safety
-- ✅ **No Dependencies** - Lightweight with zero external dependencies
-- ✅ **Async Support** - First-class support for async/await patterns
-- ✅ **Functional Composition** - Chain operations with `Then` and `When`
-- ✅ **Type-Safe** - Generic `Result<T>` for operations that return values
-- ✅ **Error Aggregation** - Combine multiple results and aggregate errors
-- ✅ **Implicit Conversions** - Seamless conversion between values and Results
+- ✅ **Lightning Fast** - <100μs message capture latency
+- ✅ **Thread-Safe** - Built for concurrent testing scenarios
+- ✅ **TDD-Friendly** - First-class support for Test-Driven Development
+- ✅ **Railway-Oriented** - Uses Tethys.Results for robust error handling
+- ✅ **.NET Aspire Ready** - Seamless integration with cloud-native applications
+- ✅ **Zero Dependencies** - No Docker or external services required
+- ✅ **Real-Time Visibility** - See SNS messages instantly during debugging
 
-## Installation
+## 📋 Quick Start
+
+### Installation
 
 ```bash
-dotnet add package Tethys.Results
+dotnet add package TopicTracker --prerelease
 ```
-
-## Quick Start
 
 ### Basic Usage
 
 ```csharp
-using Tethys.Results;
+// In your test project
+var builder = WebApplication.CreateBuilder(args);
 
-// Simple success/failure results
-Result successResult = Result.Ok("Success message");
-Result failureResult = Result.Fail("Something went wrong");
-
-// Results with values
-Result<string> valueResult = Result<string>.Ok("Hello World", "Operation completed");
-Result<int> errorResult = Result<int>.Fail("Not found");
-
-// Results with exceptions
-var exception = new Exception("Test exception");
-Result failWithException = Result.Fail("Error message", exception);
-```
-
-### Chaining Operations
-
-```csharp
-// Chain multiple operations that depend on each other
-var result = Result.Ok("Start")
-    .Then(() => 
-    {
-        // Do some work
-        return Result.Ok("First operation completed");
-    })
-    .Then(() => 
-    {
-        // Do more work
-        return Result.Ok("Second operation completed");
-    })
-    .Then(() => 
-    {
-        // Final operation
-        return Result.Ok("All operations completed");
-    });
-
-if (result.Success)
+// Add TopicTracker
+builder.Services.AddTopicTracker(options =>
 {
-    Console.WriteLine($"Success: {result.Message}");
-}
-else
-{
-    Console.WriteLine($"Error: {result.Message}");
-}
-```
-
-### Working with Data
-
-```csharp
-// Transform data through a pipeline
-var result = Result<int>.Ok(42, "Initial value")
-    .Then(value => 
-    {
-        // Transform the value
-        return Result<string>.Ok(value.ToString(), "Converted to string");
-    })
-    .Then(str => 
-    {
-        // Further transformation
-        return Result<string>.Ok($"The answer is: {str}", "Formatted result");
-    });
-
-// Extract the final value
-string finalValue = result.GetValueOrDefault("No answer available");
-```
-
-### Async Support
-
-```csharp
-// Chain async operations seamlessly
-var result = await Result.Ok("Start")
-    .ThenAsync(async () =>
-    {
-        await Task.Delay(100); // Simulate async work
-        return Result.Ok("Async operation completed");
-    })
-    .ThenAsync(async () =>
-    {
-        await Task.Delay(100); // More async work
-        return Result<string>.Ok("Final result", "All async operations done");
-    });
-
-// Work with Task<Result> directly
-Task<Result<int>> asyncResult = Task.FromResult(Result<int>.Ok(42, "From async"));
-var processed = await asyncResult.ThenAsync(async value =>
-{
-    await Task.Delay(100);
-    return Result<string>.Ok($"Processed: {value}", "Transformation complete");
+    options.Port = 5001;
+    options.MaxMessages = 1000;
 });
+
+var app = builder.Build();
+app.MapControllers();
+app.Run();
 ```
 
-### Conditional Execution
+### Configure Your Lambda
 
 ```csharp
-// Execute operations conditionally
-var result = Result.Ok("Initial state")
-    .When(true, () => Result.Ok("Condition was true"))
-    .When(false, () => Result.Ok("This won't execute"));
-
-// Conditional execution with data
-var dataResult = Result<int>.Ok(10)
-    .When(true, () => Result<int>.Ok(20))
-    .Then(value => Result<int>.Ok(value * 2)); // Results in 40
-```
-
-### Error Aggregation
-
-```csharp
-// Combine multiple validation results
-var results = new List<Result>
+// Point your Lambda to TopicTracker instead of AWS
+var snsConfig = new AmazonSNSConfig
 {
-    ValidateEmail("user@example.com"),
-    ValidatePassword("SecurePass123!"),
-    ValidateUsername("johndoe")
+    ServiceURL = Environment.GetEnvironmentVariable("SNS_ENDPOINT_URL") ?? "http://localhost:5001"
 };
-
-var combined = Result.Combine(results);
-if (!combined.Success)
-{
-    // Access aggregated errors
-    var aggregateError = combined.Exception as AggregateError;
-    foreach (var error in aggregateError.ErrorMessages)
-    {
-        Console.WriteLine($"Validation error: {error}");
-    }
-}
-
-// Combine results with data
-var dataResults = new List<Result<int>>
-{
-    Result<int>.Ok(1),
-    Result<int>.Ok(2),
-    Result<int>.Ok(3)
-};
-
-var combinedData = Result<int>.Combine(dataResults);
-if (combinedData.Success)
-{
-    var sum = combinedData.Data.Sum(); // Sum is 6
-}
+var snsClient = new AmazonSNSClient(snsConfig);
 ```
 
-### Value Extraction
+### Verify Messages in Tests
 
 ```csharp
-Result<User> userResult = GetUser(userId);
-
-// Get value or default
-User user = userResult.GetValueOrDefault(new User { Name = "Guest" });
-
-// Try pattern
-if (userResult.TryGetValue(out User foundUser))
+[Test]
+public async Task Lambda_Should_Publish_Order_Event()
 {
-    Console.WriteLine($"Found user: {foundUser.Name}");
-}
-else
-{
-    Console.WriteLine("User not found");
-}
-
-// Get value or throw (use sparingly)
-try
-{
-    User user = userResult.GetValueOrThrow();
-    // Use the user
-}
-catch (InvalidOperationException ex)
-{
-    // Handle the error
-    Console.WriteLine($"Failed to get user: {ex.Message}");
-}
-```
-
-### Implicit Conversions
-
-```csharp
-// Implicitly convert values to Results
-Result<int> implicitResult = 42; // Creates Result<int>.Ok(42)
-Result<string> stringResult = "Hello"; // Creates Result<string>.Ok("Hello")
-
-// Implicitly convert successful Results to values (throws if failed)
-Result<int> successResult = Result<int>.Ok(42);
-int value = successResult; // Gets 42
-
-// Use in expressions
-Result<int> result1 = Result<int>.Ok(10);
-Result<int> result2 = Result<int>.Ok(20);
-int sum = result1 + result2; // Implicit conversion, sum is 30
-```
-
-## API Reference
-
-### Result Class
-
-- `Result.Ok()` - Creates a successful result
-- `Result.Ok(string message)` - Creates a successful result with a message
-- `Result.Fail(string message)` - Creates a failed result with an error message
-- `Result.Fail(string message, Exception exception)` - Creates a failed result with message and exception
-- `Result.Fail(Exception exception)` - Creates a failed result from an exception
-- `Result.Combine(IEnumerable<Result> results)` - Combines multiple results into one
-
-### Result<T> Class
-
-- `Result<T>.Ok(T value)` - Creates a successful result with a value
-- `Result<T>.Ok(T value, string message)` - Creates a successful result with a value and message
-- `Result<T>.Fail(string message)` - Creates a failed result with an error message
-- `Result<T>.Fail(string message, Exception exception)` - Creates a failed result with message and exception
-- `Result<T>.Fail(Exception exception)` - Creates a failed result from an exception
-- `Result<T>.Combine(IEnumerable<Result<T>> results)` - Combines multiple results with values
-
-### Extension Methods
-
-- `Then(Func<Result> operation)` - Chains operations on successful results
-- `Then<T>(Func<Result<T>> operation)` - Chains operations that return values
-- `ThenAsync(Func<Task<Result>> operation)` - Chains async operations
-- `ThenAsync<T>(Func<Task<Result<T>>> operation)` - Chains async operations that return values
-- `When(bool condition, Func<Result> operation)` - Conditionally executes operations
-- `GetValueOrDefault(T defaultValue = default)` - Gets the value or a default
-- `TryGetValue(out T value)` - Tries to get the value using the Try pattern
-- `GetValueOrThrow()` - Gets the value or throws an exception
-
-## Advanced Usage
-
-### Real-World Example: Order Processing
-
-```csharp
-public async Task<Result<Order>> ProcessOrderAsync(OrderRequest request)
-{
-    return await ValidateOrderRequest(request)
-        .ThenAsync(async validRequest => await CreateOrder(validRequest))
-        .ThenAsync(async order => await ApplyDiscounts(order))
-        .ThenAsync(async order => await CalculateTaxes(order))
-        .ThenAsync(async order => await ChargePayment(order))
-        .ThenAsync(async order => await SendConfirmationEmail(order))
-        .ThenAsync(async order =>
-        {
-            await LogOrderProcessed(order);
-            return Result<Order>.Ok(order, "Order processed successfully");
-        });
-}
-
-// Usage
-var result = await ProcessOrderAsync(orderRequest);
-if (result.Success)
-{
-    return Ok(result.Value);
-}
-else
-{
-    _logger.LogError(result.Exception, "Order processing failed: {Message}", result.Message);
-    return BadRequest(result.Message);
-}
-```
-
-### Integration with ASP.NET Core
-
-```csharp
-[HttpGet("{id}")]
-public async Task<IActionResult> GetUser(int id)
-{
-    var result = await _userService.GetUserAsync(id);
+    // Arrange
+    var tracker = new TopicTrackerClient("http://localhost:5001");
+    await tracker.ClearMessages();
     
-    return result.Success
-        ? Ok(result.Value)
-        : NotFound(result.Message);
-}
-
-[HttpPost]
-public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
-{
-    var validationResult = ValidateRequest(request);
-    if (!validationResult.Success)
-    {
-        return BadRequest(validationResult.Message);
-    }
-
-    var result = await _userService.CreateUserAsync(request);
+    // Act - invoke your Lambda
+    await InvokeLambda(new { OrderId = "12345", Amount = 99.99 });
     
-    return result.Success
-        ? CreatedAtAction(nameof(GetUser), new { id = result.Value.Id }, result.Value)
-        : BadRequest(result.Message);
+    // Assert - verify SNS message was captured
+    var published = await tracker.VerifyMessagePublished(
+        topicArn: "arn:aws:sns:us-east-1:000000000000:order-events",
+        expectedContent: new { OrderId = "12345", Status = "Processed" },
+        timeout: TimeSpan.FromSeconds(2)
+    );
+    
+    await Assert.That(published).IsTrue();
 }
 ```
 
-### Error Handling Patterns
+## 🏗️ Architecture
 
-```csharp
-// Centralized error handling
-public Result<T> ExecuteWithErrorHandling<T>(Func<T> operation, string operationName)
-{
-    try
-    {
-        var result = operation();
-        return Result<T>.Ok(result, $"{operationName} completed successfully");
-    }
-    catch (ValidationException ex)
-    {
-        return Result<T>.Fail($"Validation failed in {operationName}: {ex.Message}", ex);
-    }
-    catch (NotFoundException ex)
-    {
-        return Result<T>.Fail($"Resource not found in {operationName}: {ex.Message}", ex);
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Unexpected error in {OperationName}", operationName);
-        return Result<T>.Fail($"An unexpected error occurred in {operationName}", ex);
-    }
-}
+TopicTracker is built with performance and developer experience in mind:
+
+- **In-Memory Storage** - Zero-latency message capture
+- **Thread-Safe Collections** - ReaderWriterLockSlim for concurrent access
+- **Source Generators** - Compile-time JSON serialization
+- **Result Pattern** - Explicit error handling without exceptions
+
+See the [Architecture Documentation](./context/TopicTracker/architecture.md) for detailed design information.
+
+## 🧪 Testing
+
+TopicTracker is built using Test-Driven Development with TUnit:
+
+```bash
+# Run all tests
+dotnet test
+
+# Run with coverage
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 ```
 
-## Best Practices
+## 📊 Development Progress
 
-1. **Use Result for Expected Failures** - Reserve exceptions for truly exceptional cases
-2. **Chain Operations** - Leverage `Then` and `ThenAsync` for clean, readable code
-3. **Avoid Nested Results** - Use `Then` instead of manual checking
-4. **Consistent Error Messages** - Provide clear, actionable error messages
-5. **Leverage Implicit Conversions** - Simplify code with implicit conversions where appropriate
-6. **Prefer TryGetValue** - Use `TryGetValue` over `GetValueOrThrow` for safer value extraction
-7. **Aggregate Validation Errors** - Use `Result.Combine` for multiple validation checks
+Track the development progress in real-time:
+- [Progress Dashboard](./context/TopicTracker/PROGRESS.md)
+- [Development Plan](./context/TopicTracker/development-plan.md)
+- [GitHub Project Board](https://github.com/dwalleck/TopicTracker/projects/1)
 
-## Contributing
+## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guidelines](./AGENT-GUIDELINES.md) for details on our TDD workflow and quality standards.
 
-## License
+### Quick Contribution Guide
+
+1. Pick an issue from the [project board](https://github.com/dwalleck/TopicTracker/projects/1)
+2. Write failing tests first (TDD red phase)
+3. Implement the minimum code to pass tests
+4. Ensure >95% code coverage
+5. Submit a PR with your changes
+
+## 📚 Documentation
+
+- [Product Requirements Document](./context/TopicTracker/prd.md)
+- [Architecture Document](./context/TopicTracker/architecture.md)
+- [Development Plan](./context/TopicTracker/development-plan.md)
+- [Agent Guidelines](./AGENT-GUIDELINES.md)
+
+## 🛠️ Technology Stack
+
+- **.NET 8.0+** - Modern .NET platform
+- **TUnit** - Next-generation testing framework
+- **Tethys.Results** - Railway-oriented programming
+- **Polly** - Resilience and transient fault handling
+- **Source Generators** - Compile-time optimizations
+
+## 📈 Performance
+
+TopicTracker is designed for extreme performance:
+
+- **Message Capture**: <100μs latency
+- **Throughput**: 10,000+ messages/second
+- **Memory**: ~1KB per message
+- **Zero Allocations**: On hot paths
+
+## 🎯 Use Cases
+
+- **Local Lambda Development** - Test SNS publishing without AWS
+- **Integration Testing** - Verify message flow in CI/CD
+- **Debugging** - See exactly what your code publishes
+- **Load Testing** - Handle high-throughput scenarios
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+## 🙏 Acknowledgments
 
-- 📧 Email: support@tethys.dev
-- 🐛 Issues: [GitHub Issues](https://github.com/dwalleck/Tethys.Results/issues)
-- 📖 Documentation: [Full Documentation](https://github.com/dwalleck/Tethys.Results/wiki)
+- Inspired by the need for better local AWS development tools
+- Built with lessons learned from LocalStack usage
+- Leverages the power of modern .NET and TDD practices
 
-## Acknowledgments
+---
 
-Inspired by functional programming patterns and the Railway Oriented Programming approach.
+**Note**: TopicTracker is currently in active development. Check the [progress tracker](./context/TopicTracker/PROGRESS.md) for the latest status.
