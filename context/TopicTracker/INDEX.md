@@ -12,6 +12,7 @@ This directory contains all planning, architecture, and tracking documents for t
 
 - [**ROADMAP.md**](./ROADMAP.md) - Visual development timeline with weekly milestones
 - [**development-order.md**](./development-order.md) - Explicit issue dependencies and parallel work opportunities
+- [**agent-startup-guide.md**](./agent-startup-guide.md) - Templates for directing AI agents to work on tasks
 - [**TODO.md**](./TODO.md) - Current action items and next steps
 
 ## 📊 Progress Tracking
