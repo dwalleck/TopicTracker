@@ -35,6 +35,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\TopicTracker.Core\TopicTracker.Core.csproj" />
   </ItemGroup>
 
