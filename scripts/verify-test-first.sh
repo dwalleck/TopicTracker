@@ -47,7 +47,7 @@ for impl_file in $IMPL_FILES; do
     dir_name=$(dirname "$impl_file")
     
     # Convert src path to test path
-    test_dir=${dir_name/src/test}
+    test_dir=${dir_name/src/tests}
     test_dir=${test_dir/TopicTracker/TopicTracker.Test}
     
     # Look for corresponding test files
