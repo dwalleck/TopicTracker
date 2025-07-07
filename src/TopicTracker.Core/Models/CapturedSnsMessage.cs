@@ -44,6 +44,16 @@ public class CapturedSnsMessage
     public string? MessageStructure { get; init; }
     
     /// <summary>
+    /// Gets or sets the message deduplication ID for FIFO topics.
+    /// </summary>
+    public string? MessageDeduplicationId { get; init; }
+    
+    /// <summary>
+    /// Gets or sets the message group ID for FIFO topics.
+    /// </summary>
+    public string? MessageGroupId { get; init; }
+    
+    /// <summary>
     /// Gets or sets the raw payload as received from the SNS request.
     /// </summary>
     public required string RawPayload { get; init; }
