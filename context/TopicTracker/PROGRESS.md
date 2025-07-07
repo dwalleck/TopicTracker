@@ -1,8 +1,8 @@
 # TopicTracker Development Progress
 
-[![Progress](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/yourusername/TopicTracker/main/context/TopicTracker/progress.yaml&label=Progress&query=$.metrics.completed_tasks&suffix=/${metrics.total_tasks}%20tasks)](./progress.yaml)
-[![Phase](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/yourusername/TopicTracker/main/context/TopicTracker/progress.yaml&label=Phase&query=$.current_status.phase_name)](./progress.yaml)
-[![Health](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/yourusername/TopicTracker/main/context/TopicTracker/progress.yaml&label=Health&query=$.current_status.health)](./progress.yaml)
+[![Progress](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/dwalleck/TopicTracker/main/context/TopicTracker/progress.yaml&label=Progress&query=$.metrics.completed_tasks&suffix=/${metrics.total_tasks}%20tasks)](./progress.yaml)
+[![Phase](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/dwalleck/TopicTracker/main/context/TopicTracker/progress.yaml&label=Phase&query=$.current_status.phase_name)](./progress.yaml)
+[![Health](https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/dwalleck/TopicTracker/main/context/TopicTracker/progress.yaml&label=Health&query=$.current_status.health)](./progress.yaml)
 
 ## 📊 Current Status
 
@@ -70,7 +70,7 @@ None at this time.
 
 ## 🔗 Quick Links
 
-- [GitHub Project Board](https://github.com/yourusername/TopicTracker/projects/1)
+- [GitHub Project Board](https://github.com/dwalleck/TopicTracker/projects/1)
 - [Development Plan](./development-plan.md)
 - [Architecture](./architecture.md)
 - [Progress Details](./progress.yaml)

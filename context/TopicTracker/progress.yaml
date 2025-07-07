@@ -2,7 +2,7 @@ project:
   name: TopicTracker
   start_date: 2024-01-15
   target_completion: 2024-03-01
-  repository: https://github.com/yourusername/TopicTracker
+  repository: https://github.com/dwalleck/TopicTracker
 current_status:
   last_updated: '2025-07-06T23:52:27.001059+00:00'
   phase: 1
