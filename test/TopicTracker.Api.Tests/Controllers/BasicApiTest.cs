@@ -15,7 +15,8 @@ public class BasicApiTest
         using var client = factory.CreateClient();
         
         // Act
-        var response = await client.PostAsync("/", new StringContent("Action=Publish"));
+        var content = new StringContent("Action=Publish", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
+        var response = await client.PostAsync("/", content);
         
         // Assert
         await Assert.That(response).IsNotNull();
