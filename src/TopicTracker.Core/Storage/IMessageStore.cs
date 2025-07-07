@@ -1,5 +1,4 @@
 using TopicTracker.Core.Models;
-using TopicTracker.Core.Results;
 using Tethys.Results;
 
 namespace TopicTracker.Core.Storage;
@@ -7,7 +6,7 @@ namespace TopicTracker.Core.Storage;
 /// <summary>
 /// Defines the contract for storing and retrieving captured SNS messages.
 /// </summary>
-public interface IMessageStore
+public interface IMessageStore : IDisposable
 {
     /// <summary>
     /// Adds a captured message to the store.

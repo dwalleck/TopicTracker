@@ -10,7 +10,7 @@ using TopicTracker.Core.Storage;
 
 namespace TopicTracker.Core.Tests.Storage;
 
-public class InMemoryMessageStoreTests
+public class InMemoryMessageStoreTests : IDisposable
 {
     private InMemoryMessageStore _store = null!;
     
@@ -18,6 +18,11 @@ public class InMemoryMessageStoreTests
     public void Setup()
     {
         _store = new InMemoryMessageStore(maxMessages: 100);
+    }
+    
+    public void Dispose()
+    {
+        _store?.Dispose();
     }
     
     [Test]
@@ -71,9 +76,35 @@ public class InMemoryMessageStoreTests
     }
     
     [Test]
-    public async Task Add_Should_Have_Low_Latency()
+    public async Task Add_Should_Replace_Existing_Message_With_Same_Id()
     {
         // Arrange
+        var message1 = CreateTestMessage("duplicate-id", "arn:aws:sns:us-east-1:123456789012:topic1");
+        var message2 = CreateTestMessage("duplicate-id", "arn:aws:sns:us-east-1:123456789012:topic2");
+        
+        // Act
+        var result1 = _store.Add(message1);
+        var result2 = _store.Add(message2);
+        
+        // Assert
+        await Assert.That(result1.Success).IsTrue();
+        await Assert.That(result2.Success).IsTrue();
+        await Assert.That(_store.Count).IsEqualTo(1);
+        
+        var messages = _store.GetMessages();
+        await Assert.That(messages.Data!.Count).IsEqualTo(1);
+        await Assert.That(messages.Data![0].TopicArn).IsEqualTo("arn:aws:sns:us-east-1:123456789012:topic2");
+    }
+    
+    [Test]
+    public async Task Add_Should_Have_Low_Latency()
+    {
+        // Arrange - warm up the store
+        for (int i = 0; i < 10; i++)
+        {
+            _store.Add(CreateTestMessage($"warmup-{i}"));
+        }
+        
         var message = CreateTestMessage("perf-test");
         var stopwatch = new Stopwatch();
         
@@ -84,7 +115,8 @@ public class InMemoryMessageStoreTests
         
         // Assert
         await Assert.That(result.Success).IsTrue();
-        await Assert.That(stopwatch.Elapsed.TotalMicroseconds).IsLessThan(100); // <100μs requirement
+        var microseconds = stopwatch.Elapsed.TotalMilliseconds * 1000;
+        await Assert.That(microseconds).IsLessThan(100); // <100μs requirement
     }
     
     [Test]

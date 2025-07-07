@@ -63,6 +63,14 @@ public class InMemoryMessageStore : IMessageStore
         _lock.EnterWriteLock();
         try
         {
+            // Check if message with same ID already exists
+            if (_messageIndex.TryGetValue(message.Id, out var existingNode))
+            {
+                // Remove the existing message first
+                RemoveNodeFromIndexes(existingNode);
+                _messages.Remove(existingNode);
+            }
+
             // If we're at capacity, remove the oldest message (LRU eviction)
             if (_messages.Count >= _maxMessages)
             {
